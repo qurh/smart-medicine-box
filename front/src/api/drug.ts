@@ -1,10 +1,8 @@
 import type { Drug, ApiResponse, ScanDrugRequest } from '../types/drug'
 
-const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || ''
-
 // 查询药箱列表
 export async function getDrugList(): Promise<Drug[]> {
-  const resp = await fetch(`${API_URL}/api/drug/list`)
+  const resp = await fetch('/api/drug/list')
   const res: ApiResponse<Drug[]> = await resp.json()
   if (res.code !== 0) throw new Error(res.msg || '获取药品列表失败')
   return res.data || []
@@ -12,7 +10,7 @@ export async function getDrugList(): Promise<Drug[]> {
 
 // 查询药品信息
 export async function scanDrug(payload: ScanDrugRequest): Promise<Drug> {
-  const resp = await fetch(`${API_URL}/api/drug/scan`, {
+  const resp = await fetch('/api/drug/scan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -24,7 +22,7 @@ export async function scanDrug(payload: ScanDrugRequest): Promise<Drug> {
 
 // 保存药品信息到药箱
 export async function saveDrugInfo(drug: Drug): Promise<void> {
-  const resp = await fetch(`${API_URL}/api/drug/save`, {
+  const resp = await fetch('/api/drug/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(drug)
