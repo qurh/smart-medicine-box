@@ -1,0 +1,46 @@
+[
+  {
+    "name": "阿莫西林（商品名：安灭菌）",
+    "indications": "细菌性上呼吸道感染、中耳炎、泌尿系统感染",
+    "usage": "成人：每次500mg，每8小时一次口服；儿童：每日40mg/kg分3次服用",
+    "contraindications": "青霉素过敏者禁用；传染性单核细胞增多症患者禁用",
+    "precautions": "常见腹泻、皮疹；与丙磺舒联用需减量；孕妇慎用",
+    "category": "抗生素",
+    "expiration_date": null,
+    "dosage_form": null,
+    "specification": null
+  },
+  {
+    "name": "布洛芬（商品名：安灭菌）",
+    "indications": "细菌性上呼吸道感染、中耳炎、泌尿系统感染",
+    "usage": "成人：每次500mg，每8小时一次口服；儿童：每日40mg/kg分3次服用",
+    "contraindications": "青霉素过敏者禁用；传染性单核细胞增多症患者禁用",
+    "precautions": "常见腹泻、皮疹；与丙磺舒联用需减量；孕妇慎用",
+    "category": "抗生素",
+    "expiration_date": null,
+    "dosage_form": null,
+    "specification": null
+  },
+  {
+    "name": "头孢（商品名：安灭菌）",
+    "indications": "细菌性上呼吸道感染、中耳炎、泌尿系统感染",
+    "usage": "成人：每次500mg，每8小时一次口服；儿童：每日40mg/kg分3次服用",
+    "contraindications": "青霉素过敏者禁用；传染性单核细胞增多症患者禁用",
+    "precautions": "常见腹泻、皮疹；与丙磺舒联用需减量；孕妇慎用",
+    "category": "抗生素",
+    "expiration_date": null,
+    "dosage_form": null,
+    "specification": null
+  },
+  {
+    "name": "999感冒灵（商品名：安灭菌）",
+    "indications": "细菌性上呼吸道感染、中耳炎、泌尿系统感染",
+    "usage": "成人：每次500mg，每8小时一次口服；儿童：每日40mg/kg分3次服用",
+    "contraindications": "青霉素过敏者禁用；传染性单核细胞增多症患者禁用",
+    "precautions": "常见腹泻、皮疹；与丙磺舒联用需减量；孕妇慎用",
+    "category": "抗生素",
+    "expiration_date": null,
+    "dosage_form": null,
+    "specification": null
+  }
+]

@@ -1,0 +1,77 @@
+# === Python 后端相关 ===
+backend/__pycache__/
+backend/**/*.pyc
+backend/venv/
+backend/.env
+backend/*.env
+backend/logs/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.coverage
+backend/coverage.*
+backend/htmlcov/
+backend/.pdm.toml
+backend/.pdm.lock
+
+# === Node.js 前端相关 ===
+front/node_modules/
+front/dist/
+front/dist-ssr/
+front/.env
+front/*.env
+front/.output/
+front/.vitepress/
+front/.nuxt/
+front/.vercel/
+front/.next/
+front/.cache/
+front/.pnp/
+front/.pnp.js
+
+# === IDE/编辑器配置 ===
+**/.vscode/
+**/.idea/
+*.swp
+*.swo
+
+# === 操作系统生成的文件 ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# === 编辑器临时文件 ===
+*~
+*.tmp
+*.temp
+
+# === 测试/覆盖率/缓存文件 ===
+**/.pytest_cache/
+**/.mypy_cache/
+**/.coverage
+**/coverage.*
+**/htmlcov/
+**/.parcel-cache/
+**/.cache/
+**/.turbo/
+**/.eslintcache
+
+# === 其他常见产物 ===
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# package-lock.json/yarn.lock/pnpm-lock.yaml 可根据团队策略决定是否忽略
+# package-lock.json
+# pnpm-lock.yaml
+# yarn.lock
+
+# === 备份文件 ===
+*.bak
+*.orig
+*.old
+*.save
+*.backup

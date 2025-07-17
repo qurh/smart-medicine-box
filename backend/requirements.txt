@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+loguru
+httpx
+python-dotenv
+requests
+langchain-community
+dashscope
