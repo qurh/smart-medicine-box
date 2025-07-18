@@ -18,13 +18,13 @@ function goToDrugScan() {
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex flex-col">
     <h1 class="text-4xl md:text-5xl font-extrabold mb-12 mt-10 text-center text-gray-800 tracking-wide drop-shadow-lg">家庭智能药箱</h1>
     <div class="flex-1 flex flex-col items-center justify-center">
-      <div class="w-full max-w-2xl px-4 flex flex-col gap-10">
+      <div class="w-full max-w-lg px-4 flex flex-col gap-10">
         <!-- 症状查询卡片 -->
         <div
-          class="group flex flex-col items-center rounded-3xl bg-gradient-to-br from-blue-100 to-purple-100 shadow-2xl p-12 px-8 cursor-pointer transition-all duration-200 hover:-translate-y-2 hover:shadow-3xl"
+          class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center transition-all duration-200 hover:-translate-y-2 hover:shadow-3xl cursor-pointer"
           @click="goToSymptomSearch"
         >
-          <div class="mb-6">
+          <div class="w-16 h-16 flex items-center justify-center mb-6">
             <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
               <circle cx="32" cy="32" r="28" fill="url(#symptom-gradient)"/>
               <path d="M32 18a10 10 0 1 1 0 20a10 10 0 0 1 0-20z" fill="#fff"/>
@@ -43,10 +43,10 @@ function goToDrugScan() {
         </div>
         <!-- 药箱管理卡片 -->
         <div
-          class="group flex flex-col items-center rounded-3xl bg-gradient-to-br from-amber-100 to-orange-100 shadow-2xl p-12 px-8 cursor-pointer transition-all duration-200 hover:-translate-y-2 hover:shadow-3xl"
+          class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center transition-all duration-200 hover:-translate-y-2 hover:shadow-3xl cursor-pointer"
           @click="goToDrugList"
         >
-          <div class="mb-6">
+          <div class="w-16 h-16 flex items-center justify-center mb-6">
             <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
               <rect x="8" y="16" width="48" height="32" rx="8" fill="url(#box-gradient)"/>
               <rect x="20" y="28" width="24" height="8" rx="2" fill="#fff"/>
@@ -64,10 +64,10 @@ function goToDrugScan() {
         </div>
         <!-- 药品扫描卡片 -->
         <div
-          class="group flex flex-col items-center rounded-3xl bg-gradient-to-br from-pink-100 to-purple-100 shadow-2xl p-12 px-8 cursor-pointer transition-all duration-200 hover:-translate-y-2 hover:shadow-3xl"
+          class="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center transition-all duration-200 hover:-translate-y-2 hover:shadow-3xl cursor-pointer"
           @click="goToDrugScan"
         >
-          <div class="mb-6">
+          <div class="w-16 h-16 flex items-center justify-center mb-6">
             <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
               <rect x="12" y="12" width="40" height="40" rx="8" fill="url(#scan-gradient)"/>
               <rect x="24" y="28" width="16" height="8" rx="2" fill="#fff"/>
