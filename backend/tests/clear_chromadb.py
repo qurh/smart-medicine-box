@@ -1,26 +1,26 @@
-import chromadb
-from chromadb.config import Settings
+import os
+import shutil
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from app.core.config import CHROMA_PERSIST_DIR
 
-CHROMA_DIR = CHROMA_PERSIST_DIR
-COLLECTION_NAME = "medicine_drugs"
+CHROMA_DIR = Path(CHROMA_PERSIST_DIR)
 
-def clear_chromadb():
-    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
-    collection = client.get_or_create_collection(name=COLLECTION_NAME)
-    all_ids = collection.get().get('ids', [])
-    if all_ids:
-        collection.delete(ids=all_ids)
-        print(f"已清空 ChromaDB collection: {COLLECTION_NAME}，共删除 {len(all_ids)} 条数据")
+def clear_chromadb_dir():
+    if CHROMA_DIR.exists() and CHROMA_DIR.is_dir():
+        for item in CHROMA_DIR.iterdir():
+            if item.is_file() or item.is_symlink():
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item)
+        print(f"已彻底清空目录: {CHROMA_DIR}")
     else:
-        print(f"ChromaDB collection: {COLLECTION_NAME} 已为空")
+        print(f"目录不存在: {CHROMA_DIR}")
 
 if __name__ == "__main__":
-    confirm = input(f"确定要清空 ChromaDB collection '{COLLECTION_NAME}' 的所有数据吗？(y/n): ").strip().lower()
+    confirm = input(f"确定要彻底清空目录 '{CHROMA_DIR}' 下的所有数据吗？(y/n): ").strip().lower()
     if confirm == 'y':
-        clear_chromadb()
+        clear_chromadb_dir()
     else:
         print("操作已取消")
