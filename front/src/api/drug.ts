@@ -30,3 +30,15 @@ export async function saveDrugInfo(drug: Drug): Promise<void> {
   const res: ApiResponse = await resp.json()
   if (res.code !== 0) throw new Error(res.msg || '保存药品信息失败')
 }
+
+// 根据症状查询药品
+export async function searchDrugsBySymptoms(symptoms: string, topK: number = 5): Promise<Drug[]> {
+  const resp = await fetch('/api/drug/search-by-symptoms', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symptoms, top_k: topK })
+  })
+  const res: ApiResponse<Drug[]> = await resp.json()
+  if (res.code !== 0) throw new Error(res.msg || '症状查询失败')
+  return res.data || []
+}

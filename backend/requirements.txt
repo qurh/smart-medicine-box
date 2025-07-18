@@ -7,3 +7,7 @@ python-dotenv
 requests
 langchain-community
 dashscope
+sentence-transformers
+numpy
+scikit-learn
+chromadb

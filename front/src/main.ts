@@ -6,11 +6,17 @@ import './index.css'
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from './pages/Home.vue'
 import DrugList from './pages/DrugList.vue'
+import SymptomSearch from './pages/SymptomSearch.vue'
+import SymptomResults from './pages/SymptomResults.vue'
+import DrugScan from './pages/DrugScan.vue'
 import { createPinia } from 'pinia'
 
 const routes = [
   { path: '/', component: Home },
-  { path: '/drug-list', component: DrugList }
+  { path: '/drug-list', component: DrugList },
+  { path: '/symptom-search', name: 'SymptomSearch', component: SymptomSearch },
+  { path: '/symptom-results', name: 'SymptomResults', component: SymptomResults },
+  { path: '/drug-scan', name: 'DrugScan', component: DrugScan }
 ]
 
 const router = createRouter({

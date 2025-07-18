@@ -20,3 +20,7 @@ class DrugListRequest(BaseRequest):
     # 预留分页参数
     page: Optional[int] = 1
     size: Optional[int] = 20
+
+class SymptomSearchRequest(BaseRequest):
+    symptoms: str
+    top_k: Optional[int] = 5
