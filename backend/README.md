@@ -1,6 +1,40 @@
 # 家庭智能药箱后端（Python FastAPI）
 
-本项目为家庭智能药箱管理系统后端，采用 FastAPI + Pydantic + Loguru + python-dotenv + pytest，分层解耦、类型安全、配置灵活、易于测试和扩展，支持药品扫码/查询、信息提取、药箱管理、mock数据、接口联调、配置管理等功能。
+本项目为家庭智能药箱管理系统后端，采用 FastAPI + Pydantic + Loguru + python-dotenv + pytest，
+分层解耦、类型安全、配置灵活、易于测试和扩展，支持药品扫码/查询、信息提取、药箱管理、mock数据、接口联调、配置管理等功能。
+
+---
+
+## 虚拟开发环境建议
+- 强烈建议使用 Python 虚拟环境（venv 或 conda）隔离依赖，避免全局污染。
+- 创建并激活虚拟环境（以 smart-medicine-box 为例）：
+  ```bash
+  python -m venv smart-medicine-box
+  # Windows
+  .\smart-medicine-box\Scripts\activate
+  # macOS/Linux
+  source smart-medicine-box/bin/activate
+  ```
+- 然后再进行依赖安装和开发运行。
+
+---
+
+## 开发与运行
+1. 安装依赖
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. 配置环境变量（.env）
+   - 例如：QWEN3_API_KEY, USE_MOCK_DATA, ...
+   - .env从.env.example拷贝后重命名为.env即可
+3. 启动服务
+   ```bash
+   uvicorn main:app --reload
+   # 或
+   python main.py --env .env --host 0.0.0.0 --port 8000
+   ```
+4. 访问接口文档
+   - http://localhost:8000/docs
 
 ---
 
@@ -84,16 +118,8 @@ backend/
 
 ---
 
-## Pydantic v2 升级说明
-- 所有 `.dict()` 已替换为 `.model_dump()`，`.json()` 替换为 `.model_dump_json()`，完全兼容Pydantic v2。
-- 代码中如需序列化/反序列化Pydantic模型，请统一用 `model_dump()`/`model_dump_json()`。
-
----
-
 ## 其他说明
 - mock数据文件 `medicine_box.json` 可手动编辑，便于前端开发和演示。
 - 智能检索、药品列表等接口均支持mock与正式切换，便于全流程开发。
-- 详细开发文档见本项目及前端 README.md。
 - 代码结构清晰，便于维护和扩展。
 - 推荐接口文档自动生成（/docs）。
-- 代码注释和类型提示齐全，便于团队协作。
