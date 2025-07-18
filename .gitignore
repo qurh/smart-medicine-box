@@ -75,3 +75,5 @@ pnpm-debug.log*
 *.old
 *.save
 *.backup
+backend/chroma_db/
+backend/medicine_box.json
