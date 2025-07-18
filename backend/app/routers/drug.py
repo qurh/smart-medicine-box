@@ -43,7 +43,7 @@ def search_drugs_by_symptoms(req: SymptomSearchRequest):
     if not req.symptoms:
         raise HTTPException(status_code=400, detail="symptoms 不能为空")
     
-    top_k = req.top_k or 5
+    top_k = req.top_k or 3
     if USE_MOCK_DATA:
         all_drugs = get_medicine_box_list()
         results = random.sample(all_drugs, min(top_k, len(all_drugs))) if all_drugs else []

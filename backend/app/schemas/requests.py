@@ -23,4 +23,4 @@ class DrugListRequest(BaseRequest):
 
 class SymptomSearchRequest(BaseRequest):
     symptoms: str
-    top_k: Optional[int] = 5
+    top_k: Optional[int] = 3

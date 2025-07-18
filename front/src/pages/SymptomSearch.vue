@@ -96,8 +96,7 @@ function selectSymptom(symptom: string) {
       </div>
 
       <div class="mt-8 text-center text-gray-500 text-sm">
-        <p>💡 提示：描述越详细，查询结果越准确</p>
-        <p>例如："感冒发烧"、"胃痛恶心"、"头痛失眠"等</p>
+        <p>💡 检索建议：请只输入最核心的症状或疾病关键词（如“发热、咳嗽、头痛”），避免长句和无关描述，这样更容易获得准确的药品推荐。</p>
       </div>
     </div>
   </div>

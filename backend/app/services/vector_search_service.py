@@ -40,6 +40,12 @@ class VectorSearchService:
         if not drug.indications:
             logger.warning(f"药品 {drug.name} 缺少主治功效字段，跳过向量嵌入")
             return
+        # 预处理主治功效字段：只保留前3个核心症状/疾病词
+        indications = drug.indications
+        for sep in ['，', '、', ';', '；', ',', '/']:
+            indications = indications.replace(sep, '|')
+        keywords = [w.strip() for w in indications.split('|') if w.strip()]
+        core_indications = '，'.join(keywords[:3]) if keywords else drug.indications
         # 以药品名称为唯一id
         doc_id = drug.name
         # 元数据包含药品名称和完整json
@@ -52,12 +58,12 @@ class VectorSearchService:
         # 添加新向量
         self.collection.add(
             ids=[doc_id],
-            documents=[drug.indications],
+            documents=[core_indications],
             metadatas=[metadata]
         )
-        logger.info(f"已向量化并存入Chroma: {drug.name}")
+        logger.info(f"已向量化并存入Chroma: {drug.name} | 主治功效关键词: {core_indications}")
 
-    def search_by_symptoms(self, symptoms: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    def search_by_symptoms(self, symptoms: str, top_k: int = 5, min_score: float = 0.5) -> List[Dict[str, Any]]:
         """
         用症状文本向量化后在chroma中检索，返回药品元数据列表
         """
@@ -66,15 +72,21 @@ class VectorSearchService:
         try:
             results = self.collection.query(
                 query_texts=[symptoms],
-                n_results=top_k
+                n_results=top_k,
+                include=["metadatas", "distances"]
             )
-            # 解析元数据
-            metadatas = results.get('metadatas', [])
-            if not metadatas:
+            metadatas = results.get('metadatas') or []
+            distances = results.get('distances') or []
+            if not metadatas or not distances or not isinstance(metadatas, list) or not isinstance(distances, list):
                 return []
-            metadatas = metadatas[0]
-            # 返回药品信息json
-            return [json.loads(meta['drug_json']) for meta in metadatas if 'drug_json' in meta and isinstance(meta['drug_json'], str)]
+            metadatas = metadatas[0] if len(metadatas) > 0 else []
+            distances = distances[0] if len(distances) > 0 else []
+            filtered = [
+                json.loads(meta['drug_json'])
+                for meta, dist in zip(metadatas, distances)
+                if 'drug_json' in meta and isinstance(meta['drug_json'], str) and dist >= min_score
+            ]
+            return filtered
         except Exception as e:
             logger.error(f"Chroma 检索失败: {e}")
             return []

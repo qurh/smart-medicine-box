@@ -46,7 +46,7 @@ export async function saveDrugInfo(drug: Drug): Promise<void> {
 }
 
 // 根据症状查询药品
-export async function searchDrugsBySymptoms(symptoms: string, topK: number = 5): Promise<Drug[]> {
+export async function searchDrugsBySymptoms(symptoms: string, topK: number = 3): Promise<Drug[]> {
   const res = await safeFetch<Drug[]>('/api/drug/search-by-symptoms', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
