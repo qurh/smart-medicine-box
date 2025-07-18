@@ -82,7 +82,7 @@ function goToDrugScan() {
             </svg>
           </div>
           <div class="text-xl font-bold text-gray-800 mb-1">药品扫描</div>
-          <div class="text-gray-500 text-center">扫描药品条码或名称</div>
+          <div class="text-gray-500 text-center">扫描药品条码或输入药品名称</div>
         </div>
       </div>
     </div>

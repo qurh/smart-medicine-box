@@ -5,9 +5,9 @@ from app.models.drug import Drug
 def save_drug_to_box(drug: Drug):
     box = load_json_file(MEDICINE_BOX_FILE, default=[])
     if not any(item.get('name') == drug.name for item in box):
-        box.append(drug.dict())
+        box.insert(0, drug.model_dump())  # 新药品插入到头部
         save_json_file(MEDICINE_BOX_FILE, box)
     return True
 
 def get_medicine_box_list():
-    return load_json_file(MEDICINE_BOX_FILE, default=[]) 
+    return load_json_file(MEDICINE_BOX_FILE, default=[])

@@ -52,17 +52,17 @@ app.add_middleware(
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     logger.error(f"HTTPException: {exc.detail}")
-    return JSONResponse(status_code=exc.status_code, content=BaseResponse(code=exc.status_code, msg=exc.detail, data=None).dict())
+    return JSONResponse(status_code=exc.status_code, content=BaseResponse(code=exc.status_code, msg=exc.detail, data=None).model_dump())
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.error(f"ValidationError: {exc.errors()}")
-    return JSONResponse(status_code=422, content=BaseResponse(code=422, msg="参数校验失败", data=exc.errors()).dict())
+    return JSONResponse(status_code=422, content=BaseResponse(code=422, msg="参数校验失败", data=exc.errors()).model_dump())
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled Exception: {exc}")
-    return JSONResponse(status_code=500, content=BaseResponse(code=500, msg="服务器内部错误", data=None).dict())
+    return JSONResponse(status_code=500, content=BaseResponse(code=500, msg="服务器内部错误", data=None).model_dump())
 
 # 路由注册
 app.include_router(drug.router, prefix="/api")

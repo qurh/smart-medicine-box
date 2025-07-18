@@ -17,8 +17,7 @@ class VectorSearchService:
         self.model = SentenceTransformer(self.model_name)
         self.chroma_client = chromadb.Client(Settings(persist_directory=CHROMA_PERSIST_DIR))
         self.collection = self.chroma_client.get_or_create_collection(
-            name=CHROMA_COLLECTION_NAME,
-            embedding_function=embedding_functions.SentenceTransformerEmbeddingFunction(self.model_name)
+            name=CHROMA_COLLECTION_NAME
         )
         logger.info(f"向量模型: {self.model_name}, Chroma collection: {CHROMA_COLLECTION_NAME}")
 
@@ -32,7 +31,7 @@ class VectorSearchService:
         # 元数据包含药品名称和完整json
         metadata = {
             "name": drug.name,
-            "drug_json": drug.json(ensure_ascii=False)
+            "drug_json": drug.model_dump_json()
         }
         # 先删除同名旧向量
         self.collection.delete(ids=[doc_id])
@@ -56,9 +55,12 @@ class VectorSearchService:
                 n_results=top_k
             )
             # 解析元数据
-            metadatas = results.get('metadatas', [[]])[0]
+            metadatas = results.get('metadatas', [])
+            if not metadatas:
+                return []
+            metadatas = metadatas[0]
             # 返回药品信息json
-            return [json.loads(meta['drug_json']) for meta in metadatas if 'drug_json' in meta]
+            return [json.loads(meta['drug_json']) for meta in metadatas if 'drug_json' in meta and isinstance(meta['drug_json'], str)]
         except Exception as e:
             logger.error(f"Chroma 检索失败: {e}")
             return []
@@ -73,6 +75,25 @@ class VectorSearchService:
                 self.add_drug_embedding(Drug(**drug))
             except Exception as e:
                 logger.warning(f"药品向量化失败: {e}")
+
+    def get_all_drugs_from_vector_db(self) -> list[dict]:
+        """获取向量数据库中所有药品元数据（反序列化drug_json）"""
+        try:
+            results = self.collection.get()
+            metadatas = results.get('metadatas', [])
+            if not metadatas:
+                return []
+            all_drugs = []
+            for meta in metadatas:
+                if isinstance(meta, dict) and 'drug_json' in meta and isinstance(meta['drug_json'], str):
+                    try:
+                        all_drugs.append(json.loads(meta['drug_json']))
+                    except Exception:
+                        pass
+            return all_drugs
+        except Exception as e:
+            logger.error(f"Chroma 全量获取失败: {e}")
+            return []
 
 # 全局实例
 vector_search_service = VectorSearchService() 
