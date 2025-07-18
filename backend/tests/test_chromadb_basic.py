@@ -2,13 +2,17 @@ import chromadb
 from chromadb.config import Settings
 import json
 import pytest
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from app.core.config import CHROMA_PERSIST_DIR
 
-CHROMA_DIR = "app/chroma_db"
+CHROMA_DIR = CHROMA_PERSIST_DIR
 COLLECTION_NAME = "medicine_drugs"
 
 @pytest.fixture(scope="module")
 def collection():
-    client = chromadb.Client(Settings(persist_directory=CHROMA_DIR))
+    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
     return client.get_or_create_collection(name=COLLECTION_NAME)
 
 def test_chromadb_all_drugs(collection):

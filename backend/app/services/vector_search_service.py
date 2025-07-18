@@ -6,16 +6,30 @@ from app.services.medicine_box_service import get_medicine_box_list
 from loguru import logger
 from app.core.config import VECTOR_MODEL_NAME, CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME
 import chromadb
-from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 import json
+import os
 
 class VectorSearchService:
     def __init__(self):
         # 支持模型可配置
         self.model_name = VECTOR_MODEL_NAME
         self.model = SentenceTransformer(self.model_name)
-        self.chroma_client = chromadb.Client(Settings(persist_directory=CHROMA_PERSIST_DIR))
+        chroma_dir = str(CHROMA_PERSIST_DIR)
+        print(f"[ChromaDB] 持久化目录: {chroma_dir}")
+        if not os.path.exists(chroma_dir):
+            print(f"[ChromaDB] 持久化目录不存在，将自动创建: {chroma_dir}")
+            os.makedirs(chroma_dir, exist_ok=True)
+        else:
+            files = os.listdir(chroma_dir)
+            # 更健壮的数据文件检测
+            key_files = ['chroma.sqlite3', 'manifest.json', 'chroma-collections.parquet']
+            data_files = [f for f in files if os.path.isfile(os.path.join(chroma_dir, f)) and os.path.getsize(os.path.join(chroma_dir, f)) > 0]
+            if not any(f in files for f in key_files) and not data_files:
+                print(f"[ChromaDB] 警告：持久化目录下无典型ChromaDB数据文件或有效数据文件，可能未持久化！")
+            else:
+                print(f"[ChromaDB] 检测到数据文件: {data_files if data_files else files}")
+        self.chroma_client = chromadb.PersistentClient(path=chroma_dir)
         self.collection = self.chroma_client.get_or_create_collection(
             name=CHROMA_COLLECTION_NAME
         )
@@ -96,4 +110,23 @@ class VectorSearchService:
             return []
 
 # 全局实例
-vector_search_service = VectorSearchService() 
+vector_search_service = VectorSearchService()
+
+def detect_chromadb_persistence():
+    chroma_dir = str(CHROMA_PERSIST_DIR)
+    print(f"[ChromaDB] 检查持久化目录: {chroma_dir}")
+    if not os.path.exists(chroma_dir):
+        print(f"[ChromaDB] 持久化目录不存在，自动创建: {chroma_dir}")
+        os.makedirs(chroma_dir, exist_ok=True)
+        return False
+    files = os.listdir(chroma_dir)
+    data_files = [f for f in files if f.endswith(('.parquet', '.bin', '.json'))]
+    if not data_files:
+        print(f"[ChromaDB] 持久化目录下无数据文件，可能未持久化！")
+        return False
+    print(f"[ChromaDB] 检测到数据文件: {data_files}")
+    return True
+
+if __name__ == "__main__":
+    print("[ChromaDB] 自动检测与修复持久化目录...")
+    detect_chromadb_persistence() 

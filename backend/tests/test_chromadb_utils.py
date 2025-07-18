@@ -1,13 +1,17 @@
 import chromadb
 from chromadb.config import Settings
 import json
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from app.core.config import CHROMA_PERSIST_DIR
 
 # 配置与collection名需与主项目一致
-CHROMA_DIR = "app/chroma_db"
+CHROMA_DIR = CHROMA_PERSIST_DIR
 COLLECTION_NAME = "medicine_drugs"
 
 def print_all_drugs():
-    client = chromadb.Client(Settings(persist_directory=CHROMA_DIR))
+    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
     collection = client.get_or_create_collection(name=COLLECTION_NAME)
     results = collection.get()
     metadatas = results.get('metadatas')
@@ -22,19 +26,19 @@ def print_all_drugs():
         print('-'*40)
 
 def get_drug_by_id(drug_id):
-    client = chromadb.Client(Settings(persist_directory=CHROMA_DIR))
+    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
     collection = client.get_or_create_collection(name=COLLECTION_NAME)
     result = collection.get(ids=[drug_id])
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 def search_by_symptom(symptom, top_k=5):
-    client = chromadb.Client(Settings(persist_directory=CHROMA_DIR))
+    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
     collection = client.get_or_create_collection(name=COLLECTION_NAME)
     result = collection.query(query_texts=[symptom], n_results=top_k)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 def export_all_drugs_to_json(outfile="all_drugs_export.json"):
-    client = chromadb.Client(Settings(persist_directory=CHROMA_DIR))
+    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
     collection = client.get_or_create_collection(name=COLLECTION_NAME)
     results = collection.get()
     metadatas = results.get('metadatas')

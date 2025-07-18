@@ -1,11 +1,15 @@
 import chromadb
 from chromadb.config import Settings
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from app.core.config import CHROMA_PERSIST_DIR
 
-CHROMA_DIR = "app/chroma_db"
+CHROMA_DIR = CHROMA_PERSIST_DIR
 COLLECTION_NAME = "medicine_drugs"
 
 def clear_chromadb():
-    client = chromadb.Client(Settings(persist_directory=CHROMA_DIR))
+    client = chromadb.Client(Settings(persist_directory=str(CHROMA_DIR)))
     collection = client.get_or_create_collection(name=COLLECTION_NAME)
     all_ids = collection.get().get('ids', [])
     if all_ids:
