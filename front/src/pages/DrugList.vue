@@ -20,7 +20,7 @@ watch(
   }
 )
 
-const pageSize = 8
+const pageSize = 5
 const currentPage = ref(1)
 const pagedList = computed(() => {
   const start = (currentPage.value - 1) * pageSize
