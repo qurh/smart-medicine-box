@@ -14,7 +14,9 @@ class VectorSearchService:
     def __init__(self):
         # 支持模型可配置
         self.model_name = VECTOR_MODEL_NAME
-        self.model = SentenceTransformer(self.model_name)
+        # 直接从本地路径加载 paraphrase-multilingual-MiniLM-L12-v2
+        self.model_path = r"D:\projects\models\paraphrase-multilingual-MiniLM-L12-v2"
+        self.model = SentenceTransformer(self.model_path)
         chroma_dir = str(CHROMA_PERSIST_DIR)
         print(f"[ChromaDB] 持久化目录: {chroma_dir}")
         if not os.path.exists(chroma_dir):
@@ -55,9 +57,12 @@ class VectorSearchService:
         }
         # 先删除同名旧向量
         self.collection.delete(ids=[doc_id])
+        # 生成 embedding
+        embedding = self.model.encode(core_indications).tolist()
         # 添加新向量
         self.collection.add(
             ids=[doc_id],
+            embeddings=[embedding],
             documents=[core_indications],
             metadatas=[metadata]
         )
@@ -116,7 +121,7 @@ class VectorSearchService:
                         all_drugs.append(json.loads(meta['drug_json']))
                     except Exception:
                         pass
-            return all_drugs
+            return list(reversed(all_drugs))
         except Exception as e:
             logger.error(f"Chroma 全量获取失败: {e}")
             return []
