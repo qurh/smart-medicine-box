@@ -46,6 +46,7 @@
 - pytest（单元测试）
 - LangChain + Qwen3（大模型/AI能力，按需可选）
 - Chroma（本地向量数据库，药品主存储与智能检索）
+- 支持云端/本地 embedding 模型灵活切换（bge-m3、paraphrase-multilingual-MiniLM-L12-v2等）
 
 ---
 
@@ -118,10 +119,39 @@ backend/
 
 ---
 
+## 向量 embedding 机制与配置
+
+本项目支持通过 .env 配置灵活切换 embedding 生成方式，兼容云端 bge-m3 和本地 SentenceTransformer 模型。
+
+### 1. 默认（推荐）云端 embedding
+```env
+EMBEDDING_PROVIDER=cloud_bge_m3
+# 云端 embedding 服务地址已内置，无需额外配置
+```
+所有 embedding 生成均通过云端 bge-m3 服务，适合生产环境和资源统一管理。
+
+### 2. 本地 embedding（如需离线/自定义模型）
+```env
+EMBEDDING_PROVIDER=local_model
+EMBEDDING_MODEL_PATH=D:\projects\models\paraphrase-multilingual-MiniLM-L12-v2
+```
+本地 embedding 需提前下载好模型，适合离线或特殊场景。
+
+### 3. 切换机制
+- 只需修改 .env 配置，无需改动代码，重启服务后自动生效。
+- 未来可扩展更多 embedding 方案。
+
+### 4. 相关代码说明
+- embedding 生成统一通过 `get_embedding` 方法，内部自动根据配置选择云端或本地。
+- 详见 `app/services/vector_search_service.py`。
+
+---
+
 ## 其他说明
 - mock数据文件 `medicine_box.json` 可手动编辑，便于前端开发和演示。
 - 智能检索、药品列表等接口均支持mock与正式切换，便于全流程开发。
 - 代码结构清晰，便于维护和扩展。
+- embedding 机制支持云端与本地灵活切换，便于适配不同部署场景。
 - 推荐接口文档自动生成（/docs）。
 
 ## ChromaDB 本地持久化说明

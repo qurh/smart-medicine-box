@@ -4,19 +4,21 @@ from typing import List, Dict, Any
 from app.models.drug import Drug
 from app.services.medicine_box_service import get_medicine_box_list
 from loguru import logger
-from app.core.config import VECTOR_MODEL_NAME, CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME
+from app.core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, get_settings
 import chromadb
 from chromadb.utils import embedding_functions
 import json
 import os
+import requests
+
+class EmbeddingProvider:
+    CLOUD = "cloud_bge_m3"
+    LOCAL = "local_model"
 
 class VectorSearchService:
     def __init__(self):
-        # 支持模型可配置
-        self.model_name = VECTOR_MODEL_NAME
-        # 直接从本地路径加载 paraphrase-multilingual-MiniLM-L12-v2
-        self.model_path = r"D:\projects\models\paraphrase-multilingual-MiniLM-L12-v2"
-        self.model = SentenceTransformer(self.model_path)
+        settings = get_settings() if callable(get_settings) else get_settings
+        self.embedding_provider = getattr(settings, "EMBEDDING_PROVIDER", EmbeddingProvider.CLOUD)
         chroma_dir = str(CHROMA_PERSIST_DIR)
         print(f"[ChromaDB] 持久化目录: {chroma_dir}")
         if not os.path.exists(chroma_dir):
@@ -35,7 +37,12 @@ class VectorSearchService:
         self.collection = self.chroma_client.get_or_create_collection(
             name=CHROMA_COLLECTION_NAME
         )
-        logger.info(f"向量模型: {self.model_name}, Chroma collection: {CHROMA_COLLECTION_NAME}")
+        logger.info(f"Chroma collection: {CHROMA_COLLECTION_NAME}, embedding provider: {self.embedding_provider}")
+        # 本地模型初始化（仅本地模式用）
+        if self.embedding_provider == EmbeddingProvider.LOCAL:
+            self.model_path = getattr(settings, "EMBEDDING_MODEL_PATH", r"D:\\projects\\models\\paraphrase-multilingual-MiniLM-L12-v2")
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(self.model_path)
 
     def add_drug_embedding(self, drug: Drug):
         """将药品主治功效字段向量化并存入chroma，元数据为药品名称和完整json"""
@@ -57,8 +64,8 @@ class VectorSearchService:
         }
         # 先删除同名旧向量
         self.collection.delete(ids=[doc_id])
-        # 生成 embedding
-        embedding = self.model.encode(core_indications).tolist()
+        # 生成 embedding（根据配置自动切换）
+        embedding = self.get_embedding([core_indications])[0]
         # 添加新向量
         self.collection.add(
             ids=[doc_id],
@@ -125,6 +132,40 @@ class VectorSearchService:
         except Exception as e:
             logger.error(f"Chroma 全量获取失败: {e}")
             return []
+
+    def get_embedding(self, texts: list[str]) -> list:
+        if self.embedding_provider == EmbeddingProvider.LOCAL:
+            return self.get_local_embedding(texts)
+        else:
+            return self.get_bge_m3_embedding(texts)
+
+    def get_local_embedding(self, texts: list[str]) -> list:
+        """本地模型 embedding，支持批量"""
+        return [self.model.encode(t).tolist() for t in texts]
+
+    def get_bge_m3_embedding(self, texts: list[str]) -> list:
+        """云端 bge-m3 embedding 服务，支持批量"""
+        url = "http://61.169.22.138:10004/v1/embeddings"
+        payload = {
+            "model": "bge-m3",
+            "input": texts
+        }
+        try:
+            resp = requests.post(url, json=payload, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            if (
+                isinstance(data, dict)
+                and "data" in data
+                and isinstance(data["data"], list)
+                and len(data["data"]) == len(texts)
+            ):
+                return [item["embedding"] for item in data["data"]]
+            else:
+                raise ValueError(f"云端 embedding 服务返回格式异常: {data}")
+        except Exception as e:
+            logger.error(f"bge-m3 embedding 云端服务调用失败: {e}")
+            raise
 
 # 全局实例
 vector_search_service = VectorSearchService()
