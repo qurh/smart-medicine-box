@@ -1,19 +1,18 @@
-import numpy as np
-from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any
 from app.models.drug import Drug
 from app.services.medicine_box_service import get_medicine_box_list
 from loguru import logger
-from app.core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, get_settings
+from app.core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, get_settings, DASHSCOPE_API_KEY
 import chromadb
-from chromadb.utils import embedding_functions
 import json
 import os
 import requests
+import dashscope
+from http import HTTPStatus
 
 class EmbeddingProvider:
     CLOUD = "cloud_bge_m3"
-    LOCAL = "local_model"
+    TEXT_EMBEDDING_V4 = "text-embedding-v4"
 
 class VectorSearchService:
     def __init__(self):
@@ -38,11 +37,13 @@ class VectorSearchService:
             name=CHROMA_COLLECTION_NAME
         )
         logger.info(f"Chroma collection: {CHROMA_COLLECTION_NAME}, embedding provider: {self.embedding_provider}")
-        # 本地模型初始化（仅本地模式用）
-        if self.embedding_provider == EmbeddingProvider.LOCAL:
-            self.model_path = getattr(settings, "EMBEDDING_MODEL_PATH", r"D:\\projects\\models\\paraphrase-multilingual-MiniLM-L12-v2")
-            from sentence_transformers import SentenceTransformer
-            self.model = SentenceTransformer(self.model_path)
+        # text-embedding-v4 初始化（云端模型）
+        if self.embedding_provider == EmbeddingProvider.TEXT_EMBEDDING_V4:
+            if not DASHSCOPE_API_KEY:
+                raise ValueError("使用 text-embedding-v4 需要配置 DASHSCOPE_API_KEY 或 QWEN3_API_KEY")
+            dashscope.api_key = DASHSCOPE_API_KEY
+            # 若使用新加坡地域的模型，请取消以下注释
+            # dashscope.base_http_api_url = "https://dashscope-intl.aliyuncs.com/api/v1"
 
     def add_drug_embedding(self, drug: Drug):
         """将药品主治功效字段向量化并存入chroma，元数据为药品名称和完整json"""
@@ -78,13 +79,24 @@ class VectorSearchService:
     def search_by_symptoms(self, symptoms: str, top_k: int = 5, min_score: float = 0.5) -> List[Dict[str, Any]]:
         """
         用症状文本向量化后在chroma中检索，返回药品元数据列表
+        注意：使用 query_embeddings 而不是 query_texts，避免 ChromaDB 使用默认的本地 embedding 模型
+        
+        Args:
+            symptoms: 症状描述文本
+            top_k: 返回最相关的 top_k 个结果
+            min_score: 最小相似度阈值（0-1），距离越小相似度越高，需要转换为相似度后比较
         """
         if not symptoms:
             return []
         try:
+            # 先使用配置的 embedding 模型将症状文本向量化
+            query_embedding = self.get_embedding([symptoms])[0]
+            
+            # 使用 query_embeddings 而不是 query_texts，避免触发 ChromaDB 默认的本地模型
+            # 增加返回数量，以便后续根据相似度过滤
             results = self.collection.query(
-                query_texts=[symptoms],
-                n_results=top_k,
+                query_embeddings=[query_embedding],
+                n_results=min(top_k * 2, 20),  # 多查询一些，然后根据相似度过滤
                 include=["metadatas", "distances"]
             )
             metadatas = results.get('metadatas') or []
@@ -93,12 +105,30 @@ class VectorSearchService:
                 return []
             metadatas = metadatas[0] if len(metadatas) > 0 else []
             distances = distances[0] if len(distances) > 0 else []
-            filtered = [
-                json.loads(meta['drug_json'])
-                for meta, dist in zip(metadatas, distances)
-                if 'drug_json' in meta and isinstance(meta['drug_json'], str) and dist >= min_score
-            ]
-            return filtered
+            
+            # ChromaDB 使用余弦距离，范围通常是 0-2
+            # 距离越小 = 相似度越高
+            # 将距离转换为相似度：similarity = 1 - (distance / 2)，范围 0-1
+            # 或者使用更严格的阈值：max_distance = 2 * (1 - min_score)
+            max_distance = 2 * (1 - min_score)  # 将相似度阈值转换为最大距离阈值
+            
+            filtered_results = []
+            for meta, dist in zip(metadatas, distances):
+                if 'drug_json' in meta and isinstance(meta['drug_json'], str):
+                    # 距离越小越相似，所以应该 dist <= max_distance
+                    if dist <= max_distance:
+                        try:
+                            drug_data = json.loads(meta['drug_json'])
+                            # 计算相似度用于排序
+                            similarity = 1 - (dist / 2) if dist <= 2 else 0
+                            filtered_results.append((drug_data, similarity, dist))
+                        except json.JSONDecodeError:
+                            continue
+            
+            # 按相似度降序排序，取前 top_k 个
+            filtered_results.sort(key=lambda x: x[1], reverse=True)
+            return [drug_data for drug_data, _, _ in filtered_results[:top_k]]
+            
         except Exception as e:
             logger.error(f"Chroma 检索失败: {e}")
             return []
@@ -134,14 +164,41 @@ class VectorSearchService:
             return []
 
     def get_embedding(self, texts: list[str]) -> list:
-        if self.embedding_provider == EmbeddingProvider.LOCAL:
-            return self.get_local_embedding(texts)
+        if self.embedding_provider == EmbeddingProvider.TEXT_EMBEDDING_V4:
+            return self.get_text_embedding_v4(texts)
         else:
             return self.get_bge_m3_embedding(texts)
 
-    def get_local_embedding(self, texts: list[str]) -> list:
-        """本地模型 embedding，支持批量"""
-        return [self.model.encode(t).tolist() for t in texts]
+    def get_text_embedding_v4(self, texts: list[str]) -> list:
+        """使用 dashscope text-embedding-v4 模型，支持批量"""
+        try:
+            # dashscope 支持批量输入，可以是字符串或字符串列表
+            if len(texts) == 1:
+                input_text = texts[0]
+            else:
+                input_text = texts
+            
+            resp = dashscope.TextEmbedding.call(
+                model="text-embedding-v4",
+                input=input_text
+            )
+            
+            if resp.status_code == HTTPStatus.OK:
+                # 处理返回结果
+                if isinstance(input_text, str):
+                    # 单个文本
+                    embeddings = [resp.output["embeddings"][0]["embedding"]]
+                else:
+                    # 批量文本
+                    embeddings = [item["embedding"] for item in resp.output["embeddings"]]
+                return embeddings
+            else:
+                error_msg = f"text-embedding-v4 调用失败: status_code={resp.status_code}, message={resp.message}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+        except Exception as e:
+            logger.error(f"text-embedding-v4 embedding 服务调用失败: {e}")
+            raise
 
     def get_bge_m3_embedding(self, texts: list[str]) -> list:
         """云端 bge-m3 embedding 服务，支持批量"""

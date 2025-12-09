@@ -17,7 +17,14 @@ def scan_drug(req: ScanRequest):
     if USE_MOCK_DATA:
         drug_info = enrich_drug_info_mock(req.drug_name)
     else:
-        drug_info = enrich_drug_info_llm(req.drug_name)
+        try:
+            drug_info = enrich_drug_info_llm(req.drug_name)
+        except ValueError as e:
+            error_msg = str(e)
+            from loguru import logger
+            logger.error(f"LLM 调用失败: {error_msg}")
+            # 直接抛出错误，让前端看到真实的错误信息
+            raise HTTPException(status_code=500, detail=error_msg)
     return BaseResponse(data=drug_info)
 
 @router.post("/save", response_model=BaseResponse)
